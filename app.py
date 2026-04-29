@@ -1,8 +1,13 @@
+import os
 import pickle
 from urllib.parse import urlparse
 from flask import Flask, request, render_template
 from feature_extract import extract_features, FREE_DDNS, SKETCHY_TLDS
 import ipaddress
+
+if not os.path.exists("phishing_model.pkl"):
+    import gdown
+    gdown.download("https://drive.google.com/uc?id=YOUR_FILE_ID_HERE", "phishing_model.pkl", quiet=False)
 
 app = Flask(__name__)
 

@@ -1,8 +1,9 @@
 flask
+gunicorn
 scikit-learn
 xgboost
 imbalanced-learn
 pandas
 numpy
 matplotlib
- 
+gdown
