@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Phishing Detector</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: linear-gradient(
+          135deg,
+          #dbeafe 0%,
+          #ede9fe 50%,
+          #fce7f3 100%
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "IBM Plex Sans", sans-serif;
+        color: #1a1a2e;
+      }
+
+      .wrap {
+        background: #fff;
+        border-radius: 18px;
+        padding: 40px 36px 36px;
+        width: 100%;
+        max-width: 460px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06),
+          0 12px 32px rgba(99, 102, 241, 0.12);
+      }
+
+      .icon {
+        font-size: 34px;
+        margin-bottom: 14px;
+      }
+
+      h1 {
+        font-size: 22px;
+        font-weight: 600;
+        margin: 0 0 6px;
+        letter-spacing: -0.3px;
+        background: linear-gradient(90deg, #2563eb, #7c3aed);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .desc {
+        font-size: 13.5px;
+        color: #6b7280;
+        margin: 0 0 28px;
+        line-height: 1.6;
+      }
+
+      label {
+        display: block;
+        font-size: 12px;
+        font-weight: 500;
+        color: #4b5563;
+        margin-bottom: 7px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 11px 14px;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 13px;
+        border: 1.5px solid #e0e7ff;
+        border-radius: 8px;
+        color: #111827;
+        background: #f8f9ff;
+        outline: none;
+        transition: border-color 0.15s, box-shadow 0.15s;
+        box-sizing: border-box;
+      }
+
+      input[type="text"]:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+        background: #fff;
+      }
+
+      input[type="text"]::placeholder {
+        color: #a5b4fc;
+      }
+
+      button {
+        margin-top: 14px;
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(90deg, #2563eb, #7c3aed);
+        color: #fff;
+        font-family: "IBM Plex Sans", sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: opacity 0.15s, transform 0.1s;
+      }
+
+      button:hover {
+        opacity: 0.88;
+      }
+      button:active {
+        transform: scale(0.99);
+      }
+
+      .result {
+        margin-top: 22px;
+        padding: 14px 16px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.5;
+        border-left: 4px solid transparent;
+      }
+
+      .result small {
+        display: block;
+        font-size: 12px;
+        font-weight: 400;
+        margin-top: 3px;
+        opacity: 0.75;
+      }
+
+      .legit {
+        background: #f0fdf4;
+        border-color: #22c55e;
+        color: #166534;
+      }
+      .suspicious {
+        background: #fff7ed;
+        border-color: #f97316;
+        color: #9a3412;
+      }
+      .phishing {
+        background: #fef2f2;
+        border-color: #ef4444;
+        color: #991b1b;
+      }
+
+      .note {
+        margin-top: 24px;
+        padding-top: 18px;
+        border-top: 1px solid #f3f4f6;
+        font-size: 11.5px;
+        color: #9ca3af;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="icon">🔍</div>
+      <h1>Phishing URL Detector</h1>
+      <p class="desc">
+        Paste a URL and I'll check it against a trained ML model to see if it
+        looks like a phishing attempt.
+      </p>
+
+      <form action="/predict" method="post">
+        <label for="url">URL</label>
+        <input
+          id="url"
+          type="text"
+          name="url"
+          placeholder="https://some-sketchy-site.com/login"
+          required
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button type="submit">Check this URL</button>
+      </form>
+
+      {% if prediction_text %}
+      <div class="result {{ css_class }}">
+        {{ prediction_text }} {% if css_class == 'phishing' %}
+        <small>Avoid this link. Multiple phishing signals were detected.</small>
+        {% elif css_class == 'suspicious' %}
+        <small>Be careful — something about this URL looks off.</small>
+        {% else %}
+        <small>Looks clean, but always stay alert online.</small>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <p class="note">
+        Uses a machine learning model trained on URL patterns. It's not perfect
+        — always use your own judgment too.
+      </p>
+    </div>
+  </body>
+</html>
