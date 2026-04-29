@@ -7,7 +7,7 @@ import ipaddress
 
 if not os.path.exists("phishing_model.pkl"):
     import gdown
-    gdown.download("https://drive.google.com/uc?id=YOUR_FILE_ID_HERE", "phishing_model.pkl", quiet=False)
+    gdown.download("https://drive.google.com/uc?id=1M8bWWq658kUk4GE4IDzvTfdlHgbZ6Y1_", "phishing_model.pkl", quiet=False)
 
 app = Flask(__name__)
 
