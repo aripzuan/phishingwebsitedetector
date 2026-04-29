@@ -1,8 +1,18 @@
+import os
 import pickle
 from urllib.parse import urlparse
 from flask import Flask, request, render_template
 from feature_extract import extract_features, FREE_DDNS, SKETCHY_TLDS
 import ipaddress
+
+if not os.path.exists("phishing_model.pkl"):
+    from huggingface_hub import hf_hub_download
+    hf_hub_download(
+        repo_id="arridz/phishing-detector",
+        repo_type="space",
+        filename="phishing_model.pkl",
+        local_dir=".",
+    )
 
 app = Flask(__name__)
 

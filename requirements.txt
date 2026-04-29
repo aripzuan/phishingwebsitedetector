@@ -6,3 +6,4 @@ imbalanced-learn
 pandas
 numpy
 matplotlib
+huggingface_hub
