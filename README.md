@@ -1,3 +1,13 @@
+---
+title: Phishing Website Detector
+emoji: 🎣
+colorFrom: red
+colorTo: yellow
+sdk: docker
+app_file: app.py
+pinned: false
+---
+
 # Phishing Website Detector
 
 A machine learning web app that detects phishing URLs in real time using a hybrid approach — rule-based checks combined with a trained XGBoost model.
