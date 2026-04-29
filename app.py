@@ -19,7 +19,7 @@ app = Flask(__name__)
 with open("phishing_model.pkl", "rb") as f:
     saved = pickle.load(f)
 
-model  = saved["model"]
+model  = saved["model"]   # tuple (xgb, rf) for ensemble, or single model
 scaler = saved["scaler"]
 
 
@@ -78,9 +78,13 @@ def predict():
         return render_template("index.html", prediction_text=result, css_class=css_class)
 
     # ML model for everything else
-    feats             = extract_features(url)
-    features          = scaler.transform([feats])
-    prob              = model.predict_proba(features)[0][1]
+    feats    = extract_features(url)
+    features = scaler.transform([feats])
+    if isinstance(model, tuple):
+        xgb, rf = model
+        prob = (xgb.predict_proba(features)[0][1] + rf.predict_proba(features)[0][1]) / 2
+    else:
+        prob = model.predict_proba(features)[0][1]
     result, css_class = classify(prob)
 
     return render_template("index.html", prediction_text=result, css_class=css_class)
