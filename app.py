@@ -19,8 +19,9 @@ app = Flask(__name__)
 with open("phishing_model.pkl", "rb") as f:
     saved = pickle.load(f)
 
-model  = saved["model"]   # tuple (xgb, rf) for ensemble, or single model
-scaler = saved["scaler"]
+model     = saved["model"]
+scaler    = saved["scaler"]
+threshold = saved.get("threshold", 0.5)
 
 
 def rule_based_check(url: str, domain: str):
@@ -45,9 +46,9 @@ def rule_based_check(url: str, domain: str):
 
 
 def classify(prob: float):
-    if prob > 0.9:
+    if prob > threshold + 0.2:
         return f"🔴 High Risk — likely phishing ({prob*100:.1f}%)", "phishing"
-    elif prob > 0.75:
+    elif prob > threshold:
         return f"🟠 Suspicious — proceed with caution ({prob*100:.1f}%)", "suspicious"
     else:
         return f"🟢 Looks legitimate ({(1-prob)*100:.1f}% confidence)", "legit"
@@ -85,6 +86,7 @@ def predict():
         prob = (xgb.predict_proba(features)[0][1] + rf.predict_proba(features)[0][1]) / 2
     else:
         prob = model.predict_proba(features)[0][1]
+
     result, css_class = classify(prob)
 
     return render_template("index.html", prediction_text=result, css_class=css_class)
