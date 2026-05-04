@@ -1,9 +1,9 @@
 import os
 import pickle
+import ipaddress
 from urllib.parse import urlparse
 from flask import Flask, request, render_template
 from feature_extract import extract_features, FREE_DDNS, SKETCHY_TLDS
-import ipaddress
 
 if not os.path.exists("phishing_model.pkl"):
     from huggingface_hub import hf_hub_download
@@ -23,18 +23,43 @@ model     = saved["model"]
 scaler    = saved["scaler"]
 threshold = saved.get("threshold", 0.5)
 
+# ── Known legitimate domains ──────────────────────────────────────
+# The training dataset (phishing_site_urls.csv) has poor quality
+# legitimate URL examples, causing the model to score well-known
+# sites as phishing. This list provides a safety net for domains
+# that are unambiguously legitimate.
+KNOWN_LEGITIMATE = {
+    "google.com", "youtube.com", "gmail.com",
+    "facebook.com", "instagram.com", "twitter.com", "x.com",
+    "linkedin.com", "github.com", "stackoverflow.com",
+    "wikipedia.org", "bbc.com", "bbc.co.uk",
+    "amazon.com", "apple.com", "microsoft.com",
+    "netflix.com", "spotify.com", "reddit.com",
+    "python.org", "timberland.com", "workiva.com",
+    "huggingface.co", "kaggle.com", "openai.com",
+}
+
+
+def is_known_legitimate(domain: str) -> bool:
+    d = domain.lower().lstrip("www.")
+    return any(d == ld or d.endswith("." + ld) for ld in KNOWN_LEGITIMATE)
+
 
 def rule_based_check(url: str, domain: str):
-    # 1. Free DDNS — legitimate businesses never host here
+    # 1. Known legitimate domains — bypass model
+    if is_known_legitimate(domain):
+        return "🟢 Looks legitimate (known domain)", "legit"
+
+    # 2. Free DDNS — legitimate businesses never host here
     if any(ddns in domain for ddns in FREE_DDNS):
         return "🔴 High Risk — hosted on free DDNS service (strong phishing indicator)", "phishing"
 
-    # 2. Sketchy TLD with no HTTPS
+    # 3. Sketchy TLD with no HTTPS
     tld = "." + domain.rsplit(".", 1)[-1] if "." in domain else ""
     if tld in SKETCHY_TLDS and not url.startswith("https"):
         return "🔴 High Risk — suspicious TLD with no HTTPS", "phishing"
 
-    # 3. IP address as domain with no HTTPS
+    # 4. IP address as domain with no HTTPS
     try:
         ipaddress.ip_address(domain.split(":")[0])
         if not url.startswith("https"):
@@ -66,27 +91,19 @@ def predict():
 
     url = request.form["url"].strip()
 
-    # Normalise scheme — if user omits http:// urlparse can't extract domain or TLD
     if not url.startswith("http://") and not url.startswith("https://"):
         url = "http://" + url
 
     domain = urlparse(url).netloc.lower()
 
-    # Rule-based checks first
     rule_result = rule_based_check(url, domain)
     if rule_result:
         result, css_class = rule_result
         return render_template("index.html", prediction_text=result, css_class=css_class)
 
-    # ML model for everything else
     feats    = extract_features(url)
     features = scaler.transform([feats])
-    if isinstance(model, tuple):
-        xgb, rf = model
-        prob = (xgb.predict_proba(features)[0][1] + rf.predict_proba(features)[0][1]) / 2
-    else:
-        prob = model.predict_proba(features)[0][1]
-
+    prob     = model.predict_proba(features)[0][1]
     result, css_class = classify(prob)
 
     return render_template("index.html", prediction_text=result, css_class=css_class)

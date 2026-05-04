@@ -78,6 +78,23 @@ def entropy_of(s: str) -> float:
     return -sum(p * math.log2(p) for p in probs)
 
 
+def strip_scheme(url: str) -> str:
+    """
+    Strip http:// or https:// scheme to match training data format.
+    The training dataset (phishing_site_urls.csv) contains bare URLs
+    without schemes. Keeping the scheme causes feature mismatch at
+    inference time and inflates phishing probability for legitimate URLs.
+    HTTPS signal is preserved separately as the 'https' binary feature.
+    """
+    parsed = urlparse(url)
+    result = parsed.netloc + parsed.path
+    if parsed.query:
+        result += "?" + parsed.query
+    if parsed.fragment:
+        result += "#" + parsed.fragment
+    return result.lstrip("/")
+
+
 def strip_tracking_params(url: str) -> str:
     parsed    = urlparse(url)
     params    = parse_qs(parsed.query, keep_blank_values=True)
@@ -95,9 +112,13 @@ def path_is_encoded(path: str) -> bool:
 
 
 def extract_features(raw_url: str) -> list:
-    url    = strip_tracking_params(raw_url)
+    # Preserve HTTPS signal before stripping scheme
+    is_https = int(raw_url.lower().startswith("https"))
+
+    # Strip scheme to match training data format, then strip tracking params
+    url    = strip_tracking_params(strip_scheme(raw_url))
     parsed = urlparse(url)
-    domain = parsed.netloc.lower()
+    domain = parsed.netloc.lower() if parsed.netloc else url.split("/")[0].lower()
     path   = parsed.path
     url_l  = url.lower()
 
@@ -128,7 +149,7 @@ def extract_features(raw_url: str) -> list:
         int("@" in url),
         len(url),
         domain.count("."),
-        int(parsed.scheme == "https"),
+        is_https,          # preserved from original URL before scheme strip
         int("-" in domain),
         redirect,
         int("www." in path),
