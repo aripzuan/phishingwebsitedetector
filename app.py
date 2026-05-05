@@ -46,9 +46,9 @@ def rule_based_check(url: str, domain: str):
 
 
 def classify(prob: float):
-    if prob > threshold + 0.2:
+    if prob > threshold:
         return f"🔴 High Risk — likely phishing ({prob*100:.1f}%)", "phishing"
-    elif prob > threshold:
+    elif prob > threshold - 0.1:
         return f"🟠 Suspicious — proceed with caution ({prob*100:.1f}%)", "suspicious"
     else:
         return f"🟢 Looks legitimate ({(1-prob)*100:.1f}% confidence)", "legit"
