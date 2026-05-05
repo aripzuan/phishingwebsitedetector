@@ -1,4 +1,12 @@
-
+---
+title: Phishing Website Detector
+emoji: 🎣
+colorFrom: red
+colorTo: yellow
+sdk: docker
+app_file: app.py
+pinned: false
+---
 
 # Phishing Website Detector
 
